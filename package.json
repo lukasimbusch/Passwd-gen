@@ -1,0 +1,13 @@
+{
+  "name": "password-generator",
+  "version": "1.0.0",
+  "description": "Server-side password generator",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
