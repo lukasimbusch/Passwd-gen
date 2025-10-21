@@ -1,21 +1,16 @@
-// Import dependencies
 import express from "express";
 import cors from "cors";
 
 const app = express();
-
-// Allow JSON parsing
 app.use(express.json());
+app.use(cors()); // allow all origins
 
-// Enable CORS so your frontend can talk to this server
-app.use(cors()); // for testing, allows all origins
-
-// Root route (for testing server status)
+// Root route for testing
 app.get("/", (req, res) => {
   res.send("Password Generator Server is alive!");
 });
 
-// Password generation route
+// Generate passwords route
 app.post("/generate", (req, res) => {
   const { count, minLen, maxLen } = req.body;
 
@@ -39,8 +34,6 @@ app.post("/generate", (req, res) => {
   res.json({ passwords });
 });
 
-// Listen on Render-assigned port
+// Start server
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
