@@ -1,119 +1,76 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Password Generator (Server Version)</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #101820;
-      color: #f4f4f4;
-      text-align: center;
-      margin-top: 40px;
-    }
-    input, button {
-      margin: 8px;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      font-size: 1rem;
-    }
-    button {
-      background: #0078ff;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #005fcc;
-    }
-    #output {
-      margin-top: 20px;
-      white-space: pre-wrap;
-      text-align: left;
-      max-width: 600px;
-      margin: 20px auto;
-      background: #181f2a;
-      padding: 15px;
-      border-radius: 8px;
-      min-height: 100px;
-    }
-    #status {
-      margin-top: 15px;
-      font-size: 0.95rem;
-    }
-  </style>
-</head>
-<body>
-  <h1>Server-Based Password Generator</h1>
+<script>
+  // CHANGE THIS LINE to your Render URL:
+  const SERVER_URL = "https://password-generator.onrender.com";
+  let lastPasswords = [];
 
-  <label>Number of Passwords: <input id="count" type="number" value="10"></label><br>
-  <label>Min Length: <input id="min" type="number" value="8"></label><br>
-  <label>Max Length: <input id="max" type="number" value="16"></label><br>
+  // Helper: fetch with timeout
+  async function fetchWithTimeout(url, options = {}, timeout = 30000) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    try {
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(id);
+      return res;
+    } catch (err) {
+      clearTimeout(id);
+      throw err;
+    }
+  }
 
-  <button onclick="testServer()">Test Server</button>
-  <button onclick="generate()">Generate</button>
-  <button onclick="download()">Download</button>
-
-  <div id="status">Status: <span id="serverStatus">⏳ Not tested</span></div>
-  <div id="output"></div>
-
-  <script>
-    // CHANGE THIS LINE to your Render URL:
-    const SERVER_URL = "https://passwd-gen.onrender.com";
-    let lastPasswords = [];
-
-    async function testServer() {
-      const status = document.getElementById("serverStatus");
-      status.textContent = "🔄 Testing...";
-      try {
-        const res = await fetch(SERVER_URL + "/");
-        if (res.ok) {
-          status.textContent = "✅ Server is online!";
-        } else {
-          status.textContent = `⚠️ Server responded with ${res.status}`;
-        }
-      } catch (err) {
+  async function testServer() {
+    const status = document.getElementById("serverStatus");
+    status.textContent = "🔄 Waking server (this can take ~20s)...";
+    try {
+      const res = await fetchWithTimeout(SERVER_URL + "/", {}, 35000);
+      if (res.ok) {
+        const text = await res.text();
+        status.textContent = "✅ Server is online! (" + text.slice(0, 40) + "...)";
+      } else {
+        status.textContent = `⚠️ Server responded with ${res.status}`;
+      }
+    } catch (err) {
+      if (err.name === "AbortError") {
+        status.textContent = "⌛ Server didn’t respond (maybe still waking up). Try again in a few seconds.";
+      } else {
         status.textContent = "❌ Server not reachable (" + err.message + ")";
       }
     }
+  }
 
-    async function generate() {
-      const count = +document.getElementById("count").value;
-      const minLen = +document.getElementById("min").value;
-      const maxLen = +document.getElementById("max").value;
-      const out = document.getElementById("output");
-      out.textContent = "Generating on server... please wait.";
+  async function generate() {
+    const count = +document.getElementById("count").value;
+    const minLen = +document.getElementById("min").value;
+    const maxLen = +document.getElementById("max").value;
+    const out = document.getElementById("output");
+    out.textContent = "Generating on server... please wait.";
 
-      try {
-        const res = await fetch(`${SERVER_URL}/generate`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ count, minLen, maxLen })
-        });
+    try {
+      const res = await fetchWithTimeout(`${SERVER_URL}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ count, minLen, maxLen })
+      }, 60000);
 
-        if (!res.ok) throw new Error(`Server returned ${res.status}`);
-        const data = await res.json();
-        lastPasswords = data.passwords;
-        out.textContent = data.passwords.join("\n");
-      } catch (err) {
-        out.textContent = "❌ Error: " + err.message;
-      }
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const data = await res.json();
+      lastPasswords = data.passwords;
+      out.textContent = data.passwords.join("\n");
+    } catch (err) {
+      out.textContent = "❌ Error: " + err.message;
     }
+  }
 
-    function download() {
-      if (lastPasswords.length === 0) {
-        alert("Generate some passwords first!");
-        return;
-      }
-      const blob = new Blob([lastPasswords.join("\n")], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "passwords.txt";
-      a.click();
-      URL.revokeObjectURL(url);
+  function download() {
+    if (lastPasswords.length === 0) {
+      alert("Generate some passwords first!");
+      return;
     }
-  </script>
-</body>
-</html>
+    const blob = new Blob([lastPasswords.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "passwords.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
