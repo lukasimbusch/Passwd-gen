@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Random Password Generator</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 30px; background: #f0f0f0; }
+    .container { background: #fff; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input[type=number], input[type=text] { width: 60px; margin-bottom: 5px; }
+    button { margin-right: 10px; margin-top: 10px; padding: 5px 10px; cursor: pointer; }
+    pre { background: #eee; padding: 10px; border-radius: 5px; max-height: 200px; overflow-y: auto; }
+    label { display: block; margin: 5px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Password Generator</h1>
+
+    <label>Min length: <input type="number" id="min_length" value="12" min="1"></label>
+    <label>Max length: <input type="number" id="max_length" value="16" min="1"></label>
+    <label>Number of passwords: <input type="number" id="count" value="5" min="1"></label>
+
+    <label><input type="checkbox" id="lower" checked> Include lowercase</label>
+    <label><input type="checkbox" id="upper" checked> Include uppercase</label>
+    <label><input type="checkbox" id="digits" checked> Include digits</label>
+    <label><input type="checkbox" id="symbols"> Include symbols</label>
+
+    <label>File name: <input type="text" id="filename" placeholder="passwords.txt"></label>
+
+    <button onclick="viewPasswords()">View Passwords</button>
+    <button onclick="downloadPasswords()">Download Passwords</button>
+
+    <h2>Preview:</h2>
+    <pre id="preview"></pre>
+</div>
+
+<script>
+let generatedPasswords = [];
+
+function randomPassword(length, lower, upper, digits, symbols) {
+    let chars = "";
+    if (lower) chars += "abcdefghijklmnopqrstuvwxyz";
+    if (upper) chars += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    if (digits) chars += "0123456789";
+    if (symbols) chars += "!@#$%^&*()-_=+[]{};:,.<>?/";
+    if (!chars) return "";
+
+    let pw = "";
+    for (let i = 0; i < length; i++) {
+        pw += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return pw;
+}
+
+function generatePasswords() {
+    const minLength = parseInt(document.getElementById("min_length").value);
+    const maxLength = parseInt(document.getElementById("max_length").value);
+    const count = parseInt(document.getElementById("count").value);
+    const lower = document.getElementById("lower").checked;
+    const upper = document.getElementById("upper").checked;
+    const digits = document.getElementById("digits").checked;
+    const symbols = document.getElementById("symbols").checked;
+
+    if (minLength <= 0 || maxLength < minLength || count <= 0) {
+        alert("Invalid input values");
+        return [];
+    }
+    if (!lower && !upper && !digits && !symbols) {
+        alert("Select at least one character type");
+        return [];
+    }
+
+    const passwords = [];
+    for (let i = 0; i < count; i++) {
+        const len = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
+        passwords.push(randomPassword(len, lower, upper, digits, symbols));
+    }
+    return passwords;
+}
+
+function viewPasswords() {
+    generatedPasswords = generatePasswords();
+    if (generatedPasswords.length > 0) {
+        document.getElementById("preview").textContent = generatedPasswords.join("\n");
+    }
+}
+
+function downloadPasswords() {
+    if (generatedPasswords.length === 0) {
+        generatedPasswords = generatePasswords();
+        if (generatedPasswords.length === 0) return;
+    }
+    const filename = document.getElementById("filename").value || "passwords.txt";
+    const blob = new Blob([generatedPasswords.join("\n")], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+}
+</script>
+</body>
+</html>
