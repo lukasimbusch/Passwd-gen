@@ -3,5 +3,6 @@ services:
     name: password-generator
     env: node
     plan: free
-    buildCommand: "npm install"
-    startCommand: "npm start"
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
