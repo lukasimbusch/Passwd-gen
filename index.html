@@ -38,21 +38,45 @@
       border-radius: 8px;
       min-height: 100px;
     }
+    #status {
+      margin-top: 15px;
+      font-size: 0.95rem;
+    }
   </style>
 </head>
 <body>
-  <h1>Server-based Password Generator</h1>
+  <h1>Server-Based Password Generator</h1>
+
   <label>Number of Passwords: <input id="count" type="number" value="10"></label><br>
   <label>Min Length: <input id="min" type="number" value="8"></label><br>
   <label>Max Length: <input id="max" type="number" value="16"></label><br>
+
+  <button onclick="testServer()">Test Server</button>
   <button onclick="generate()">Generate</button>
   <button onclick="download()">Download</button>
 
+  <div id="status">Status: <span id="serverStatus">⏳ Not tested</span></div>
   <div id="output"></div>
 
   <script>
-    const SERVER_URL = "https://passwd-gen.onrender.com"; // change to your Render URL
+    // CHANGE THIS LINE to your Render URL:
+    const SERVER_URL = "https://passwd-gen.onrender.com";
     let lastPasswords = [];
+
+    async function testServer() {
+      const status = document.getElementById("serverStatus");
+      status.textContent = "🔄 Testing...";
+      try {
+        const res = await fetch(SERVER_URL + "/");
+        if (res.ok) {
+          status.textContent = "✅ Server is online!";
+        } else {
+          status.textContent = `⚠️ Server responded with ${res.status}`;
+        }
+      } catch (err) {
+        status.textContent = "❌ Server not reachable (" + err.message + ")";
+      }
+    }
 
     async function generate() {
       const count = +document.getElementById("count").value;
@@ -93,4 +117,3 @@
   </script>
 </body>
 </html>
-
