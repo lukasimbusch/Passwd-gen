@@ -59,14 +59,14 @@
   <pre id="output"></pre>
 
   <script>
-    // 🔧 CHANGE THIS TO YOUR RENDER URL
+    // 🔧 CHANGE THIS TO YOUR RENDER BACKEND URL
     const SERVER_URL = "https://passwd-gen.onrender.com";
 
     let lastPasswords = [];
 
     async function testServer() {
       const status = document.getElementById("serverStatus");
-      status.textContent = "🔄 Waking server (this can take ~40s)...";
+      status.textContent = "🔄 Waking server (this can take ~20s)...";
       try {
         const res = await fetch(SERVER_URL + "/");
         if (res.ok) {
